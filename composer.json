@@ -3,7 +3,7 @@
     "keywords": ["dbal", "database", "persistence", "queryobject"],
     "require": {
         "doctrine/dbal": "~2.5"
-    }
+    },
     "require-dev": {
         "symfony/var-dumper": "~1.0"
     }
