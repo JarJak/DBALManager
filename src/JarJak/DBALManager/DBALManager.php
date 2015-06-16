@@ -214,7 +214,46 @@ class DBALManager
 		$this->conn->executeQuery($sql, $params);
 		return $id;
 	}
-
+	
+	/**
+	 * fetch first column from all rows
+	 * @param string $sql
+	 * @param array $params
+	 * @param array $types
+	 * @return array [value1, value2, ...]
+	 */
+	public function fetchAllColumn($sql, array $params = [], array $types = [])
+	{
+		$stmt = $this->conn->executeQuery($sql, $params, $types);
+		return $stmt->fetchAll(PDO::FETCH_COLUMN);
+	}
+	
+	/**
+	 * fetch first two columns as an associative array from all rows
+	 * @param string $sql
+	 * @param array $params
+	 * @param array $types
+	 * @return array [key1 => value1, key2 => value2, ...]
+	 */
+	public function fetchAllKeyPair($sql, array $params = [], array $types = [])
+	{
+		$stmt = $this->conn->executeQuery($sql, $params, $types);
+		return $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+	}
+	
+	/**
+	 * fetch all rows result set as an associative array, indexed by first column
+	 * @param string $sql
+	 * @param array $params
+	 * @param array $types
+	 * @return array [key1 => row1, key2 => row2, ...]
+	 */
+	public function fetchAllAssoc($sql, array $params = [], array $types = [])
+	{
+		$stmt = $this->conn->executeQuery($sql, $params, $types);
+		return $stmt->fetchAll(PDO::FETCH_GROUP|PDO::FETCH_UNIQUE);
+	}
+	
 	/**
 	 * dumps query with parameters in it
 	 * @param QueryBuilder $query
