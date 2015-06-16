@@ -1,6 +1,6 @@
 <?php
 
-namespace JarJak\DBALManager\Manager;
+namespace JarJak\DBALManager;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
@@ -102,6 +102,42 @@ class DBALManager
 
 		$this->conn->executeQuery($sql, $params);
 		return $this->conn->lastInsertId();
+	}
+	
+	/**
+	 * executes "INSERT" sql statement by multi array of values
+	 * to be used for bulk inserts
+	 * @param string $table table name
+	 * @param array $columns column names for inserts
+	 * @param array $values 2-dimensional array of values to insert
+	 * @return int number of affected rows
+	 */
+	public function multiInsertByArray($table, array $columns, array $values)
+	{				
+		//for integrity check
+		$count = count($columns);
+		
+		$valueParts = [];
+		$params = [];
+		
+		foreach ($values as $row) {
+			if(count($row) !== $count) {
+				throw new \Exception("Number of columns and values does not match.");
+			}
+			$marks = [];
+			foreach ($row as $value) {
+				$marks[] = '?';
+				$params[] = $value;
+			}
+			$valueParts[] = '(' . implode(',', $marks) . ')';
+		}
+		
+		$sql = "INSERT INTO " . $table . " (";
+		$sql .= implode(', ', $columns);
+		$sql .= ") VALUES ";
+		$sql .= implode(', ', $valueParts);
+
+		return $this->conn->executeUpdate($sql, $params);
 	}
 
 	/**
