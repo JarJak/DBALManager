@@ -1,11 +1,21 @@
 {
     "name": "jarjak/dbalmanager",
     "keywords": ["dbal", "database", "persistence", "queryobject"],
+    "homepage": "https://github.com/JarJak/DBALManager",
+    "authors": [
+        {
+            "name": "Jarek Jakubowski",
+            "email": "egger1991@gmail.com"
+        }
+    ],
     "require": {
         "doctrine/dbal": "~2.5"
     },
     "require-dev": {
         "symfony/var-dumper": "~1.0"
+    },
+    "suggest": {
+        "symfony/var-dumper": "DBALManager uses VarDumper to nicely dump SQL queries"
     },
     "autoload": {
         "psr-0": { "JarJak": "src" }
