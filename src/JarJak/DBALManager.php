@@ -1,6 +1,6 @@
 <?php
 
-namespace JarJak\DBALManager;
+namespace JarJak;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
