@@ -21,5 +21,6 @@ $sqlArray = [
 	'active' => 0,
 ];
 
+/* @var $DBALManager JarJak\DBALManager\DBALManager */
 $DBALManager->insertOrUpdateByArray('user', $sqlArray, 2, ['active']);
 ```
