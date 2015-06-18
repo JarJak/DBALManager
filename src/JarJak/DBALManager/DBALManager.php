@@ -4,10 +4,12 @@ namespace JarJak\DBALManager;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
+use Exception;
+use PDO;
 
 /**
- * universal helper class for DBAL insert/update operations
- * @package DoctrineToolsBundle
+ * universal helper class to simplify DBAL insert/update/select operations
+ * @package DBALManager
  * @author Jarek Jakubowski <egger1991@gmail.com>
  */
 class DBALManager
@@ -31,18 +33,18 @@ class DBALManager
 	 * @param string $table table name
 	 * @param array $array values
 	 * @param int $updateIgnoreCount how many fields from beginning of array should be ignored on update (i.e. indexes) default: 1 (the ID)
-	 * @param mixed $excludedDefaultNullCols array of columns that can contain zero-equal values, set to false if you want to disable auto-null entirely
+	 * @param array|boolean $excludeAutoNullColumns array of columns that can contain zero-equal values, set to false if you want to disable auto-null entirely [default: false]
 	 * @return int InsertId
 	 * @link http://stackoverflow.com/questions/778534/mysql-on-duplicate-key-last-insert-id
 	 */
-	public function insertOrUpdateByArray($table, $array, $updateIgnoreCount = 1, $excludedDefaultNullCols = array('enabled', '`default`'))
-	{
+	public function insertOrUpdateByArray($table, array $array, $updateIgnoreCount = 1, $excludeAutoNullColumns = false)
+	{		
 		$cols = array();
 		$params = array();
 		$marks = array();
 		foreach ($array as $k => $v) {
-			if (false !== $excludedDefaultNullCols) {
-				if (!$v && !in_array($k, $excludedDefaultNullCols)) {
+			if (false !== $excludeAutoNullColumns) {
+				if (!$v && !in_array($k, $excludeAutoNullColumns)) {
 					$v = null;
 				}
 			}
@@ -50,8 +52,9 @@ class DBALManager
 			$params[] = $v;
 			$marks[] = '?';
 		}
+		$cols = $this->escapeSqlWords($cols);
 
-		$sql = "INSERT INTO " . $table . " (";
+		$sql = "INSERT INTO " . $this->escapeSqlWords($table) . " (";
 		$sql .= implode(', ', $cols);
 		$sql .= ") VALUES (";
 		$sql .= implode(', ', $marks);
@@ -75,17 +78,17 @@ class DBALManager
 	 * executes "INSERT" sql statement by array of parameters
 	 * @param string $table table name
 	 * @param array $array values
-	 * @param mixed $excludedDefaultNullCols array of columns that can contain zero-equal values, set to false if you want to disable auto-null entirely
+	 * @param array|boolean $excludeAutoNullColumns array of columns that can contain zero-equal values, set to false if you want to disable auto-null entirely [default: false]
 	 * @return int InsertId
 	 */
-	public function insertByArray($table, $array, $excludedDefaultNullCols = array('enabled', '`default`'))
+	public function insertByArray($table, array $array, $excludeAutoNullColumns = false)
 	{
 		$cols = array();
 		$params = array();
 		$marks = array();
 		foreach ($array as $k => $v) {
-			if (false !== $excludedDefaultNullCols) {
-				if (!$v && !in_array($k, $excludedDefaultNullCols)) {
+			if (false !== $excludeAutoNullColumns) {
+				if (!$v && !in_array($k, $excludeAutoNullColumns)) {
 					$v = null;
 				}
 			}
@@ -93,8 +96,9 @@ class DBALManager
 			$params[] = $v;
 			$marks[] = '?';
 		}
+		$cols = $this->escapeSqlWords($cols);
 
-		$sql = "INSERT INTO " . $table . " (";
+		$sql = "INSERT INTO " . $this->escapeSqlWords($table) . " (";
 		$sql .= implode(', ', $cols);
 		$sql .= ") VALUES (";
 		$sql .= implode(', ', $marks);
@@ -108,12 +112,22 @@ class DBALManager
 	 * executes "INSERT" sql statement by multi array of values
 	 * to be used for bulk inserts
 	 * @param string $table table name
-	 * @param array $columns column names for inserts
 	 * @param array $values 2-dimensional array of values to insert
+	 * @param array $columns columns for insert if $values is not associative
 	 * @return int number of affected rows
 	 */
-	public function multiInsertByArray($table, array $columns, array $values)
-	{				
+	public function multiInsertByArray($table, array $values, array $columns = array())
+	{
+		if (empty($values)) {
+			return 0;
+		}
+		
+		if (!$columns) {
+			$columns = array_keys(current($values));
+		}
+		
+		$columns = $this->escapeSqlWords($columns);
+		
 		//for integrity check
 		$count = count($columns);
 		
@@ -122,7 +136,7 @@ class DBALManager
 		
 		foreach ($values as $row) {
 			if(count($row) !== $count) {
-				throw new \Exception("Number of columns and values does not match.");
+				throw new Exception("Number of columns and values does not match.");
 			}
 			$marks = [];
 			foreach ($row as $value) {
@@ -132,7 +146,7 @@ class DBALManager
 			$valueParts[] = '(' . implode(',', $marks) . ')';
 		}
 		
-		$sql = "INSERT INTO " . $table . " (";
+		$sql = "INSERT INTO " . $this->escapeSqlWords($table) . " (";
 		$sql .= implode(', ', $columns);
 		$sql .= ") VALUES ";
 		$sql .= implode(', ', $valueParts);
@@ -144,17 +158,17 @@ class DBALManager
 	 * executes "INSERT IGNORE" sql statement by array of parameters
 	 * @param string $table table name
 	 * @param array $array values
-	 * @param mixed $excludedDefaultNullCols array of columns that can contain zero-equal values, set to false if you want to disable auto-null entirely
+	 * @param array|boolean $excludeAutoNullColumns array of columns that can contain zero-equal values, set to false if you want to disable auto-null entirely [default: false]
 	 * @return int InsertId
 	 */
-	public function insertIgnoreByArray($table, $array, $excludedDefaultNullCols = array('enabled', '`default`'))
+	public function insertIgnoreByArray($table, array $array, $excludeAutoNullColumns = false)
 	{
 		$cols = array();
 		$params = array();
 		$marks = array();
 		foreach ($array as $k => $v) {
-			if (false !== $excludedDefaultNullCols) {
-				if (!$v && !in_array($k, $excludedDefaultNullCols)) {
+			if (false !== $excludeAutoNullColumns) {
+				if (!$v && !in_array($k, $excludeAutoNullColumns)) {
 					$v = null;
 				}
 			}
@@ -162,8 +176,9 @@ class DBALManager
 			$params[] = $v;
 			$marks[] = '?';
 		}
+		$cols = $this->escapeSqlWords($cols);
 
-		$sql = "INSERT IGNORE INTO " . $table . " (";
+		$sql = "INSERT IGNORE INTO " . $this->escapeSqlWords($table) . " (";
 		$sql .= implode(', ', $cols);
 		$sql .= ") VALUES (";
 		$sql .= implode(', ', $marks);
@@ -178,18 +193,18 @@ class DBALManager
 	 * @param string $table table name
 	 * @param array $array values
 	 * @param int $id
-	 * @param mixed $excludedDefaultNullCols array of columns that can contain zero-equal values, set to false if you want to disable auto-null entirely
+	 * @param array|boolean $excludeAutoNullColumns array of columns that can contain zero-equal values, set to false if you want to disable auto-null entirely [default: false]
 	 * @return int InsertId
 	 */
-	public function updateByArray($table, $array, $id, $excludedDefaultNullCols = array('enabled', '`default`'))
+	public function updateByArray($table, array $array, $id, $excludeAutoNullColumns = false)
 	{
 		$cols = array();
 		$params = array();
 		$marks = array();
 
 		foreach ($array as $k => $v) {
-			if (false !== $excludedDefaultNullCols) {
-				if (!$v && !in_array($k, $excludedDefaultNullCols)) {
+			if (false !== $excludeAutoNullColumns) {
+				if (!$v && !in_array($k, $excludeAutoNullColumns)) {
 					$v = null;
 				}
 			}
@@ -197,12 +212,13 @@ class DBALManager
 			$params[] = $v;
 			$marks[] = '?';
 		}
+		$cols = $this->escapeSqlWords($cols);
 
-		$sql = "UPDATE " . $table . " SET ";
+		$sql = "UPDATE " . $this->escapeSqlWords($table) . " SET ";
 
 		$updateArray = array();
 		foreach ($cols as $col) {
-			$updateArray[] = '`' . $col . '` = ?';
+			$updateArray[] = $col . ' = ?';
 		}
 
 		$sql .= implode(',', $updateArray);
@@ -216,7 +232,7 @@ class DBALManager
 	}
 	
 	/**
-	 * fetch first column from all rows
+	 * fetch one column from all rows
 	 * @param string $sql
 	 * @param array $params
 	 * @param array $types
@@ -252,6 +268,29 @@ class DBALManager
 	{
 		$stmt = $this->conn->executeQuery($sql, $params, $types);
 		return $stmt->fetchAll(PDO::FETCH_GROUP|PDO::FETCH_UNIQUE);
+	}
+	
+	/**
+	 * escape column/table names for reserved SQL words
+	 * @param array|string $input
+	 * @return array|string
+	 * @throws Exception
+	 */
+	public function escapeSqlWords ($input)
+	{
+		if(!$input) {
+			throw new Exception('Empty input');
+		}
+		
+		$escapeFunction = function ($value) {
+			return '`'.preg_replace('/[^A-Za-z0-9_]+/', '', $value).'`';
+		};
+		
+		if (is_array($input)) {
+			return array_map($escapeFunction, $input);
+		} else {
+			return $escapeFunction($input);
+		}
 	}
 	
 	/**
