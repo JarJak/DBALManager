@@ -9,6 +9,10 @@ This class is a helper for Doctrine DBAL. It has been made maily to ease managin
 Integration:
 ---------------
 
+To use this class in Symfony2, please look at [https://github.com/JarJak/DBALManagerBundle](DBALManagerBundle)
+
+For any other project:
+
 Add this in your composer.json:
 ```
 "require": {
