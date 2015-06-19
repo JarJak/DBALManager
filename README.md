@@ -12,7 +12,7 @@ Integration:
 Add this in your composer.json:
 ```
 "require": {
-	"JarJak/DBALManager": "dev-master"
+	"jarjak/dbal-manager": "dev-master"
 },
 "repositories": [
 	{
