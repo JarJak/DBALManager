@@ -48,7 +48,7 @@ Lets say we have user table with:
 ```php
 $sqlArray = [
 	'username' => 'JohnKennedy',
-	'email' => 'john@kennedy.gov'
+	'email' => 'john@kennedy.gov',
 	'password' => $password,
 	'address' => '',
 	'active' => 0,
