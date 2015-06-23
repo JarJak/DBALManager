@@ -5,14 +5,19 @@ DBALManager
 This class is a helper for Doctrine DBAL. It has been made maily to ease managing bulk imports. It provides a method to execute `INSERT ... ON DUPLICATE KEY UPDATE` query on MySQL-compatible databases, which is what I miss in Doctrine's MySQL driver.
 
 
+Symfony2 installation:
+----------------------
 
-Integration:
----------------
+To use this class in Symfony2, please look at [DBALManagerBundle](https://github.com/JarJak/DBALManagerBundle)
+
+
+Integration with other frameworks:
+----------------------------------
 
 Add this in your composer.json:
 ```
 "require": {
-	"JarJak/DBALManager": "dev-master"
+	"jarjak/dbal-manager": "dev-master"
 },
 "repositories": [
 	{
@@ -35,8 +40,6 @@ $app['dbal_manager'] = $app->share(function ($app) {
 });
 ```
 
-I will provide a bundle for Symfony which sets this class as a service.
-
 Example usage:
 --------------
 
@@ -48,7 +51,7 @@ Lets say we have user table with:
 ```php
 $sqlArray = [
 	'username' => 'JohnKennedy',
-	'email' => 'john@kennedy.gov'
+	'email' => 'john@kennedy.gov',
 	'password' => $password,
 	'address' => '',
 	'active' => 0,
