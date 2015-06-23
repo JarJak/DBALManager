@@ -113,7 +113,7 @@ class DBALManager
 	 * to be used for bulk inserts
 	 * @param string $table table name
 	 * @param array $values 2-dimensional array of values to insert
-	 * @param array $columns columns for insert if $values is not associative
+	 * @param array $columns columns for insert if $values are not associative
 	 * @return int number of affected rows
 	 */
 	public function multiInsertByArray($table, array $values, array $columns = array())
