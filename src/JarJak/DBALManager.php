@@ -200,7 +200,7 @@ class DBALManager
 	{
 		$cols = array();
 		$params = array();
-		$marks = array();
+		$updateArray = array();
 
 		foreach ($array as $k => $v) {
 			if (false !== $excludeAutoNullColumns) {
@@ -210,19 +210,12 @@ class DBALManager
 			}
 			$cols[] = $k;
 			$params[] = $v;
-			$marks[] = '?';
+			$updateArray[] = $k . ' = ?';
 		}
 		$cols = $this->escapeSqlWords($cols);
 
 		$sql = "UPDATE " . $this->escapeSqlWords($table) . " SET ";
-
-		$updateArray = array();
-		foreach ($cols as $col) {
-			$updateArray[] = $col . ' = ?';
-		}
-
 		$sql .= implode(',', $updateArray);
-
 		$sql .= 'WHERE id = ?';
 
 		$params[] = $id;
