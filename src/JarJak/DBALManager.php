@@ -295,6 +295,33 @@ class DBALManager
 	
 	/**
 	 * dumps query with parameters in it
+     * @param string $sql
+     * @param array $params
+     */
+	public static function dumpSql($sql, array $params = [])
+	{
+        if (!empty($params)) {
+            $indexed = $params == array_values($params);
+            foreach ($params as $k => $v) {
+                if (is_string($v)) {
+                    $v = "'$v'";
+                }
+                if (is_array($v)) {
+                    $v = "'".implode("','", $v)."'";
+                }
+                if ($indexed) {
+                    $sql = preg_replace('/\?/', $v, $sql, 1);
+                } else {
+                    $sql = str_replace(":$k", $v, $sql);
+                }
+            }
+        }
+
+		dump($sql);
+	}
+	
+	/**
+	 * dumps query with parameters in it based on QueryBuilder
 	 * @param QueryBuilder $query
 	 */
 	public static function dumpQuery(QueryBuilder $query)
@@ -302,21 +329,6 @@ class DBALManager
 		$string = $query->getSQL();
 		$data = $query->getParameters();
 
-		$indexed = $data == array_values($data);
-		foreach ($data as $k => $v) {
-			if (is_string($v)) {
-				$v = "'$v'";
-			}
-			if (is_array($v)) {
-				$v = "'".implode("','", $v)."'";
-			}
-			if ($indexed) {
-				$string = preg_replace('/\?/', $v, $string, 1);
-			} else {
-				$string = str_replace(":$k", $v, $string);
-			}
-		}
-
-		dump($string);
+		self::dumpSql($string, $data);
 	}
 }
