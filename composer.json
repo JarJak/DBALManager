@@ -1,7 +1,9 @@
 {
     "name": "jarjak/dbal-manager",
+    "description" : "Helper class for Doctrine DBAL",
     "keywords": ["dbal", "database", "persistence", "queryobject"],
     "homepage": "https://github.com/JarJak/DBALManager",
+    "license": "GPL-2.0",
     "authors": [
         {
             "name": "Jarek Jakubowski",
