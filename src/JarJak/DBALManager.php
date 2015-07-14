@@ -214,7 +214,9 @@ class DBALManager
 		}
 		$cols = $this->escapeSqlWords($cols);
 
-		$sql = "UPDATE " . $this->escapeSqlWords($table) . " SET ";
+		$sql = "UPDATE ";
+		$sql .= $this->escapeSqlWords($table);
+		$sql .= " SET ";
 		$sql .= implode(',', $updateArray);
 		$sql .= 'WHERE id = ?';
 
