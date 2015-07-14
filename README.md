@@ -16,7 +16,8 @@ Integration with other frameworks:
 ----------------------------------
 
 Add this in your composer.json:
-```
+
+```json
 "require": {
 	"jarjak/dbal-manager": "dev-master"
 },
@@ -60,4 +61,20 @@ $sqlArray = [
 
 /* @var $DBALManager JarJak\DBALManager */
 $DBALManager->insertOrUpdateByArray('user', $sqlArray, 2, ['active']);
+```
+
+Dumping Queries
+---------------
+
+DBALManager can use VarDumper dump SQL Query from QueryBuilder ready to be copypasted into database server (with parameters already included).
+
+```php
+/* @var QueryBuilder $queryBuilder */
+\JarJak\DBALManager::dumpQuery($queryBuilder);
+```
+
+If you don't use QueryBuilder you can still dump parametrized SQL with:
+
+```php
+\JarJak\DBALManager::dumpSql($sql, $params);
 ```
