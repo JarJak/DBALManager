@@ -16,18 +16,9 @@ To use this class in Symfony2, please look at [DBALManagerBundle](https://github
 Integration with other frameworks:
 ----------------------------------
 
-Add this in your composer.json:
-
-```json
-"require": {
-	"jarjak/dbal-manager": "dev-master"
-},
-"repositories": [
-	{
-		"type": "git",
-		"url": "https://github.com/JarJak/DBALManager"
-	}
-]
+Run:
+```
+composer require jarjak/dbal-manager
 ```
 
 The class is PSR-0 compatible, so it can be integrated easily with any modern framework.
