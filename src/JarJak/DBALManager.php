@@ -73,6 +73,27 @@ class DBALManager
 		$this->conn->executeQuery($sql, $params);
 		return $this->conn->lastInsertId();
 	}
+    
+    /**
+     * returns if row has been updated or inserted
+     * can only be called after insertOrUpdateByArray, throws Exception otherwise
+     * @return boolean|null true if updated, false if inserted, null if nothing happened
+     * @throws Exception
+     * @link http://php.net/manual/en/pdostatement.rowcount.php#109891
+     */
+    public function hasBeenUpdated()
+    {
+        $rowCount = $this->conn->rowCount();
+        if($rowCount === 1) {
+            return false;
+        } elseif($rowCount === 2) {
+            return true;
+        } elseif($rowCount === 0) {
+            return null;
+        } else {
+            throw new Exception('This method should be called only after insertOrUpdateByArray. Got rowCount result: '.$rowCount);
+        }
+    }
 
 	/**
 	 * executes "INSERT" sql statement by array of parameters
