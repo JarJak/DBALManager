@@ -58,7 +58,7 @@ $DBALManager->insertOrUpdateByArray('user', $sqlArray, 2, ['active']);
 Dumping Queries
 ---------------
 
-DBALManager can use VarDumper dump SQL Query from QueryBuilder ready to be copypasted into database server (with parameters already included).
+DBALManager can use VarDumper to dump SQL queries from QueryBuilder ready to be copypasted into database server (with parameters already included).
 
 ```php
 /* @var QueryBuilder $queryBuilder */
