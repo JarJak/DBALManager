@@ -3,6 +3,7 @@
 namespace JarJak;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Driver\Statement;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Exception;
 use PDO;
@@ -15,6 +16,11 @@ use PDO;
 class DBALManager
 {
 	
+	/**
+	 * @var Statement
+	 */
+	protected $lastStatement;
+    
 	/**
 	 * @var Connection
 	 */
@@ -70,7 +76,7 @@ class DBALManager
 		$sql .= implode(', ', $updateArray);
 		$sql .= ", id=LAST_INSERT_ID(id)";
 
-		$this->conn->executeQuery($sql, $params);
+		$this->lastStatement = $this->conn->executeQuery($sql, $params);
 		return $this->conn->lastInsertId();
 	}
     
@@ -83,7 +89,10 @@ class DBALManager
      */
     public function hasBeenUpdated()
     {
-        $rowCount = $this->conn->rowCount();
+        if (!$this->lastStatement) {
+            throw new Exception('This method should be called only after insertOrUpdateByArray.');
+        }
+        $rowCount = $this->lastStatement->rowCount();
         if($rowCount === 1) {
             return false;
         } elseif($rowCount === 2) {
