@@ -33,6 +33,14 @@ class DBALManager
 	{
 		$this->conn = $conn;
 	}
+	
+	/**
+	 * @return Connection
+	 */
+	public function getConnection()
+	{
+		return $this->conn;
+	}
 
 	/**
 	 * executes "INSERT...ON DUPLICATE KEY UPDATE" sql statement by array of parameters
