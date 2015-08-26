@@ -349,6 +349,8 @@ class DBALManager
                 }
             }
         }
+        
+        $sql = str_replace(PHP_EOL, '', $sql);
 
 		dump($sql);
 	}
