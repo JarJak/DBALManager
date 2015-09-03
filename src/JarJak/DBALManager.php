@@ -309,7 +309,7 @@ class DBALManager
 	 * @return array|string
 	 * @throws Exception
 	 */
-	public function escapeSqlWords ($input)
+	public static function escapeSqlWords ($input)
 	{
 		if(!$input) {
 			throw new Exception('Empty input');
