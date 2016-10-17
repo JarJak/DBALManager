@@ -227,6 +227,53 @@ class DBALManager
 	}
 
 	/**
+	 * executes "INSERT IGNORE" sql statement by multi array of values
+	 * to be used for bulk inserts
+	 * @param string $table table name
+	 * @param array $values 2-dimensional array of values to insert
+	 * @param array $columns columns for insert if $values are not associative
+	 * @return int number of affected rows
+	 * @throws Exception
+	 */
+	public function multiInsertIgnoreByArray($table, array $values, array $columns = array())
+	{
+		if (empty($values)) {
+			return 0;
+		}
+
+		if (!$columns) {
+			$columns = array_keys(current($values));
+		}
+
+		$columns = $this->escapeSqlWords($columns);
+
+		//for integrity check
+		$count = count($columns);
+
+		$valueParts = [];
+		$params = [];
+
+		foreach ($values as $row) {
+			if(count($row) !== $count) {
+				throw new Exception("Number of columns and values does not match.");
+			}
+			$marks = [];
+			foreach ($row as $value) {
+				$marks[] = '?';
+				$params[] = $value;
+			}
+			$valueParts[] = '(' . implode(',', $marks) . ')';
+		}
+
+		$sql = "INSERT IGNORE INTO " . $this->escapeSqlWords($table) . " (";
+		$sql .= implode(', ', $columns);
+		$sql .= ") VALUES ";
+		$sql .= implode(', ', $valueParts);
+
+		return $this->conn->executeUpdate($sql, $params);
+	}
+
+	/**
 	 * executes "UPDATE" sql statement by array of parameters
 	 * @param string $table table name
 	 * @param array $array values
