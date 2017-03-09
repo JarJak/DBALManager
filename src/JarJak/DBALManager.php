@@ -62,7 +62,12 @@ class DBALManager
             $values = SqlPreparator::setNullValues($values, $excludeAutoNullColumns);
         }
 
-        $ignoreForUpdate = array_slice(array_keys($values), 0, $updateIgnoreCount);
+        if ($updateIgnoreCount) {
+            $ignoreForUpdate = array_slice(array_keys($values), 0, $updateIgnoreCount);
+        } else {
+            $ignoreForUpdate = [];
+        }
+
         list($sql, $params) = array_values(SqlPreparator::prepareInsertOrUpdate($table, $values, $ignoreForUpdate));
 
         $this->lastStatement = $this->conn->executeQuery($sql, $params);
@@ -85,6 +90,7 @@ class DBALManager
         if (!$this->lastStatement) {
             throw new Exception('This method should be called only after insertOrUpdateByArray.');
         }
+
         $rowCount = $this->lastStatement->rowCount();
         if ($rowCount === 1) {
             return false;
@@ -122,7 +128,12 @@ class DBALManager
             $rows = SqlPreparator::setNullValues($rows, $excludeAutoNullColumns);
         }
 
-        $ignoreForUpdate = array_slice(array_keys(current($rows)), 0, $updateIgnoreCount);
+        if ($updateIgnoreCount) {
+            $ignoreForUpdate = array_slice(SqlPreparator::extractColumnsFromRows($rows), 0, $updateIgnoreCount);
+        } else {
+            $ignoreForUpdate = [];
+        }
+
         list($sql, $params) = array_values(SqlPreparator::prepareMultiInsertOrUpdate($table, $rows, $ignoreForUpdate));
 
         return $this->conn->executeUpdate($sql, $params);
