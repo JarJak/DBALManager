@@ -1,7 +1,7 @@
 DBALManager
 ===========
 
-[![SensioLabsInsight](https://insight.sensiolabs.com/projects/7d2b23a4-1c67-46d6-9ac2-9af69041f3cf/small.png)](https://insight.sensiolabs.com/projects/7d2b23a4-1c67-46d6-9ac2-9af69041f3cf)
+[![SensioLabsInsight](https://insight.sensiolabs.com/projects/26cdcbf9-dd47-452a-a933-f954ecd90d03/big.png)](https://insight.sensiolabs.com/projects/26cdcbf9-dd47-452a-a933-f954ecd90d03)
 
 Set of helper classes for Doctrine DBAL. It has been made maily to ease creating bulk imports. It provides a method to execute `INSERT ... ON DUPLICATE KEY UPDATE` query on MySQL-compatible databases, which is what I miss in Doctrine's MySQL driver.
 
