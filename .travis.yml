@@ -12,6 +12,6 @@ php:
   - nightly
 
 install:
-  - travis_retry composer install
+  - travis_retry composer update
 
-script: ./vendor/bin/phpunit --configuration phpunit.xml.dist
+script: ./vendor/bin/phpunit

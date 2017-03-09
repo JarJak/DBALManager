@@ -13,7 +13,11 @@
     ],
     "autoload": {
         "psr-4": {
-            "JarJak\\": "src/JarJak",
+            "JarJak\\": "src/JarJak"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
             "JarJak\\Tests\\": "tests/JarJak"
         }
     },
