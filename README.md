@@ -77,5 +77,5 @@ Testing
 Run tests with:
 
 ```
-bin/vender/phpunit -v
+bin/vendor/phpunit -v
 ```
