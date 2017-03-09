@@ -12,7 +12,7 @@ use PDO;
  * universal helper class to simplify DBAL insert/update/select operations
  *
  * @package DBALManager
- * @author Jarek Jakubowski <egger1991@gmail.com>
+ * @author  Jarek Jakubowski <egger1991@gmail.com>
  */
 class DBALManager
 {
@@ -45,47 +45,25 @@ class DBALManager
     /**
      * executes "INSERT...ON DUPLICATE KEY UPDATE" sql statement by array of parameters
      *
-     * @param string $table table name
-     * @param array $array values
-     * @param int $updateIgnoreCount how many fields from beginning of array should be ignored on update (i.e. indexes) default: 1 (the ID)
-     * @param array|boolean $excludeAutoNullColumns array of columns that can contain zero-equal values, set to false if you want to disable auto-null entirely [default: false]
+     * @param string        $table                  table name
+     * @param array         $values                 values
+     * @param int           $updateIgnoreCount      how many fields from beginning of array should be ignored on update
+     *                                              (i.e. indexes) default: 1 (the ID)
+     * @param array|boolean $excludeAutoNullColumns array of columns that can contain zero-equal values, set to false
+     *                                              if you want to disable auto-null entirely [default: false]
      *
      * @return int InsertId
      *
      * @link http://stackoverflow.com/questions/778534/mysql-on-duplicate-key-last-insert-id
      */
-    public function insertOrUpdateByArray($table, array $array, $updateIgnoreCount = 1, $excludeAutoNullColumns = false)
+    public function insertOrUpdateByArray($table, array $values, $updateIgnoreCount = 1, $excludeAutoNullColumns = false)
     {
-        $cols = [];
-        $params = [];
-        $marks = [];
-        foreach ($array as $k => $v) {
-            if (false !== $excludeAutoNullColumns) {
-                if (!$v && !in_array($k, $excludeAutoNullColumns)) {
-                    $v = null;
-                }
-            }
-            $cols[] = $k;
-            $params[] = $v;
-            $marks[] = '?';
+        if (false !== $excludeAutoNullColumns) {
+            $values = SqlPreparator::setNullValues($values, $excludeAutoNullColumns);
         }
-        $cols = $this->escapeSqlWords($cols);
 
-        $sql = "INSERT INTO " . $this->escapeSqlWords($table) . " (";
-        $sql .= implode(', ', $cols);
-        $sql .= ") VALUES (";
-        $sql .= implode(', ', $marks);
-        $sql .= ") ON DUPLICATE KEY UPDATE ";
-
-        for ($i = 0; $i < $updateIgnoreCount; $i++) {
-            array_shift($cols);
-        }
-        $updateArray = [];
-        foreach ($cols as $col) {
-            $updateArray[] = "$col=VALUES($col)";
-        }
-        $sql .= implode(', ', $updateArray);
-        $sql .= ", id=LAST_INSERT_ID(id)";
+        $ignoreForUpdate = array_slice(array_keys($values), 0, $updateIgnoreCount);
+        list($sql, $params) = array_values(SqlPreparator::prepareInsertOrUpdate($table, $values, $ignoreForUpdate));
 
         $this->lastStatement = $this->conn->executeQuery($sql, $params);
 
@@ -120,39 +98,55 @@ class DBALManager
     }
 
     /**
+     * executes "INSERT...ON DUPLICATE KEY UPDATE" sql statement by multi array of values
+     * to be used for bulk inserts
+     *
+     * @param string        $table                  table name
+     * @param array         $rows                   2-dimensional array of values to insert
+     * @param int           $updateIgnoreCount      how many fields from beginning of array should be ignored on update
+     *                                              (i.e. indexes) default: 1 (the ID)
+     * @param array|boolean $excludeAutoNullColumns array of columns that can contain zero-equal values, set to false
+     *                                              if you want to disable auto-null entirely [default: false]
+     *
+     * @return int number of affected rows
+     *
+     * @throws Exception
+     */
+    public function multiInsertOrUpdateByArray($table, array $rows, $updateIgnoreCount = 1, $excludeAutoNullColumns = false)
+    {
+        if (empty($rows)) {
+            return 0;
+        }
+
+        if (false !== $excludeAutoNullColumns) {
+            $rows = SqlPreparator::setNullValues($rows, $excludeAutoNullColumns);
+        }
+
+        $ignoreForUpdate = array_slice(array_keys(current($rows)), 0, $updateIgnoreCount);
+        list($sql, $params) = array_values(SqlPreparator::prepareMultiInsertOrUpdate($table, $rows, $ignoreForUpdate));
+
+        return $this->conn->executeUpdate($sql, $params);
+    }
+
+    /**
      * executes "INSERT" sql statement by array of parameters
      *
-     * @param string $table table name
-     * @param array $array values
-     * @param array|boolean $excludeAutoNullColumns array of columns that can contain zero-equal values, set to false if you want to disable auto-null entirely [default: false]
+     * @param string        $table                  table name
+     * @param array         $values                 values
+     * @param array|boolean $excludeAutoNullColumns array of columns that can contain zero-equal values, set to false
+     *                                              if you want to disable auto-null entirely [default: false]
+     *
      * @return int InsertId
      *
-     * @deprecated you can simply use Connection::insert()
+     * @deprecated you can simply use Connection->insert()
      */
-    public function insertByArray($table, array $array, $excludeAutoNullColumns = false)
+    public function insertByArray($table, array $values, $excludeAutoNullColumns = false)
     {
-        $cols = [];
-        $params = [];
-        $marks = [];
-        foreach ($array as $k => $v) {
-            if (false !== $excludeAutoNullColumns) {
-                if (!$v && !in_array($k, $excludeAutoNullColumns)) {
-                    $v = null;
-                }
-            }
-            $cols[] = $k;
-            $params[] = $v;
-            $marks[] = '?';
+        if (false !== $excludeAutoNullColumns) {
+            $values = SqlPreparator::setNullValues($values, $excludeAutoNullColumns);
         }
-        $cols = $this->escapeSqlWords($cols);
 
-        $sql = "INSERT INTO " . $this->escapeSqlWords($table) . " (";
-        $sql .= implode(', ', $cols);
-        $sql .= ") VALUES (";
-        $sql .= implode(', ', $marks);
-        $sql .= ") ";
-
-        $this->conn->executeQuery($sql, $params);
+        $this->conn->insert($table, $values);
 
         return $this->conn->lastInsertId();
     }
@@ -161,48 +155,21 @@ class DBALManager
      * executes "INSERT" sql statement by multi array of values
      * to be used for bulk inserts
      *
-     * @param string $table table name
-     * @param array $values 2-dimensional array of values to insert
-     * @param array $columns columns for insert if $values are not associative
+     * @param string $table   table name
+     * @param array  $rows    2-dimensional array of values to insert
+     * @param array  $columns columns for insert if $values are not associative
      *
      * @return int number of affected rows
      *
      * @throws Exception
      */
-    public function multiInsertByArray($table, array $values, array $columns = [])
+    public function multiInsertByArray($table, array $rows, array $columns = [])
     {
-        if (empty($values)) {
+        if (empty($rows)) {
             return 0;
         }
 
-        if (!$columns) {
-            $columns = array_keys(current($values));
-        }
-
-        $columns = $this->escapeSqlWords($columns);
-
-        //for integrity check
-        $count = count($columns);
-
-        $valueParts = [];
-        $params = [];
-
-        foreach ($values as $row) {
-            if (count($row) !== $count) {
-                throw new Exception("Number of columns and values does not match.");
-            }
-            $marks = [];
-            foreach ($row as $value) {
-                $marks[] = '?';
-                $params[] = $value;
-            }
-            $valueParts[] = '(' . implode(',', $marks) . ')';
-        }
-
-        $sql = "INSERT INTO " . $this->escapeSqlWords($table) . " (";
-        $sql .= implode(', ', $columns);
-        $sql .= ") VALUES ";
-        $sql .= implode(', ', $valueParts);
+        list($sql, $params) = array_values(SqlPreparator::prepareMultiInsert($table, $rows, $columns));
 
         return $this->conn->executeUpdate($sql, $params);
     }
@@ -210,34 +177,20 @@ class DBALManager
     /**
      * executes "INSERT IGNORE" sql statement by array of parameters
      *
-     * @param string $table table name
-     * @param array $array values
-     * @param array|boolean $excludeAutoNullColumns array of columns that can contain zero-equal values, set to false if you want to disable auto-null entirely [default: false]
+     * @param string        $table                  table name
+     * @param array         $values                 values
+     * @param array|boolean $excludeAutoNullColumns array of columns that can contain zero-equal values, set to false
+     *                                              if you want to disable auto-null entirely [default: false]
      *
      * @return int InsertId
      */
-    public function insertIgnoreByArray($table, array $array, $excludeAutoNullColumns = false)
+    public function insertIgnoreByArray($table, array $values, $excludeAutoNullColumns = false)
     {
-        $cols = [];
-        $params = [];
-        $marks = [];
-        foreach ($array as $k => $v) {
-            if (false !== $excludeAutoNullColumns) {
-                if (!$v && !in_array($k, $excludeAutoNullColumns)) {
-                    $v = null;
-                }
-            }
-            $cols[] = $k;
-            $params[] = $v;
-            $marks[] = '?';
+        if (false !== $excludeAutoNullColumns) {
+            $values = SqlPreparator::setNullValues($values, $excludeAutoNullColumns);
         }
-        $cols = $this->escapeSqlWords($cols);
 
-        $sql = "INSERT IGNORE INTO " . $this->escapeSqlWords($table) . " (";
-        $sql .= implode(', ', $cols);
-        $sql .= ") VALUES (";
-        $sql .= implode(', ', $marks);
-        $sql .= ") ";
+        list($sql, $params) = array_values(SqlPreparator::prepareInsertIgnore($table, $values));
 
         $this->conn->executeQuery($sql, $params);
 
@@ -248,48 +201,21 @@ class DBALManager
      * executes "INSERT IGNORE" sql statement by multi array of values
      * to be used for bulk inserts
      *
-     * @param string $table table name
-     * @param array $values 2-dimensional array of values to insert
-     * @param array $columns columns for insert if $values are not associative
+     * @param string $table   table name
+     * @param array  $rows    2-dimensional array of values to insert
+     * @param array  $columns columns for insert if $values are not associative
      *
      * @return int number of affected rows
      *
      * @throws Exception
      */
-    public function multiInsertIgnoreByArray($table, array $values, array $columns = [])
+    public function multiInsertIgnoreByArray($table, array $rows, array $columns = [])
     {
-        if (empty($values)) {
+        if (empty($rows)) {
             return 0;
         }
 
-        if (!$columns) {
-            $columns = array_keys(current($values));
-        }
-
-        $columns = $this->escapeSqlWords($columns);
-
-        //for integrity check
-        $count = count($columns);
-
-        $valueParts = [];
-        $params = [];
-
-        foreach ($values as $row) {
-            if (count($row) !== $count) {
-                throw new Exception("Number of columns and values does not match.");
-            }
-            $marks = [];
-            foreach ($row as $value) {
-                $marks[] = '?';
-                $params[] = $value;
-            }
-            $valueParts[] = '(' . implode(',', $marks) . ')';
-        }
-
-        $sql = "INSERT IGNORE INTO " . $this->escapeSqlWords($table) . " (";
-        $sql .= implode(', ', $columns);
-        $sql .= ") VALUES ";
-        $sql .= implode(', ', $valueParts);
+        list($sql, $params) = array_values(SqlPreparator::prepareMultiInsertIgnore($table, $rows, $columns));
 
         return $this->conn->executeUpdate($sql, $params);
     }
@@ -297,42 +223,23 @@ class DBALManager
     /**
      * executes "UPDATE" sql statement by array of parameters
      *
-     * @param string $table table name
-     * @param array $array values
-     * @param int $id
-     * @param array|boolean $excludeAutoNullColumns array of columns that can contain zero-equal values, set to false if you want to disable auto-null entirely [default: false]
+     * @param string        $table                  table name
+     * @param array         $values                 values
+     * @param int           $id
+     * @param array|boolean $excludeAutoNullColumns array of columns that can contain zero-equal values, set to false
+     *                                              if you want to disable auto-null entirely [default: false]
      *
      * @return int InsertId
      *
-     * @deprecated you can simply use Connection::update()
+     * @deprecated you can simply use Connection->update()
      */
-    public function updateByArray($table, array $array, $id, $excludeAutoNullColumns = false)
+    public function updateByArray($table, array $values, $id, $excludeAutoNullColumns = false)
     {
-        $cols = [];
-        $params = [];
-        $updateArray = [];
-
-        foreach ($array as $k => $v) {
-            if (false !== $excludeAutoNullColumns) {
-                if (!$v && !in_array($k, $excludeAutoNullColumns)) {
-                    $v = null;
-                }
-            }
-            $cols[] = $k;
-            $params[] = $v;
-            $updateArray[] = $k . ' = ?';
+        if (false !== $excludeAutoNullColumns) {
+            $values = SqlPreparator::setNullValues($values, $excludeAutoNullColumns);
         }
-        $cols = $this->escapeSqlWords($cols);
 
-        $sql = "UPDATE ";
-        $sql .= $this->escapeSqlWords($table);
-        $sql .= " SET ";
-        $sql .= implode(',', $updateArray);
-        $sql .= 'WHERE id = ?';
-
-        $params[] = $id;
-
-        $this->conn->executeQuery($sql, $params);
+        $this->conn->update($table, $values, ['id' => $id]);
 
         return $id;
     }
@@ -341,8 +248,8 @@ class DBALManager
      * fetch one column from all rows
      *
      * @param string $sql
-     * @param array $params
-     * @param array $types
+     * @param array  $params
+     * @param array  $types
      *
      * @return array [value1, value2, ...]
      */
@@ -357,8 +264,8 @@ class DBALManager
      * fetch first two columns as an associative array from all rows
      *
      * @param string $sql
-     * @param array $params
-     * @param array $types
+     * @param array  $params
+     * @param array  $types
      *
      * @return array [key1 => value1, key2 => value2, ...]
      */
@@ -373,8 +280,8 @@ class DBALManager
      * fetch all rows result set as an associative array, indexed by first column
      *
      * @param string $sql
-     * @param array $params
-     * @param array $types
+     * @param array  $params
+     * @param array  $types
      *
      * @return array [key1 => row1, key2 => row2, ...]
      */
@@ -393,94 +300,36 @@ class DBALManager
      * @return array|string
      *
      * @throws Exception
+     *
+     * @deprecated use SqlPreparator::escapeSqlWords()
      */
     public static function escapeSqlWords($input)
     {
-        if (!$input) {
-            throw new Exception('Empty input');
-        }
-
-        $escapeFunction = function ($value) {
-            return '`' . preg_replace('/[^A-Za-z0-9_]+/', '', $value) . '`';
-        };
-
-        if (is_array($input)) {
-            return array_map($escapeFunction, $input);
-        } else {
-            return $escapeFunction($input);
-        }
-    }
-
-    /**
-     * get query with parameters in it based on QueryBuilder
-     *
-     * @param QueryBuilder $qb
-     *
-     * @return string
-     */
-    public static function getQuery(QueryBuilder $qb)
-    {
-        return self::getSqlWithParams($qb->getSQL(), $qb->getParameters());
-    }
-
-    /**
-     * get query with parameters in it
-     *
-     * @param string $sql
-     * @param array $params
-     *
-     * @return string
-     */
-    public static function getSqlWithParams($sql, array $params = [])
-    {
-        if (!empty($params)) {
-            $indexed = $params == array_values($params);
-            foreach ($params as $k => $v) {
-                if (is_string($v)) {
-                    $v = "'$v'";
-                }
-                if (is_array($v)) {
-                    $v = "'" . implode("','", $v) . "'";
-                }
-                if ($indexed) {
-                    $sql = preg_replace('/\?/', $v, $sql, 1);
-                } else {
-                    $sql = str_replace(":$k", $v, $sql);
-                }
-            }
-        }
-
-        $sql = str_replace(PHP_EOL, '', $sql);
-
-        return $sql;
+        return SqlPreparator::escapeSqlWords($input);
     }
 
     /**
      * dump query with parameters in it based on QueryBuilder
      *
      * @param QueryBuilder $query
+     *
+     * @deprecated use SqlDumper::dumpQuery()
      */
     public static function dumpQuery(QueryBuilder $query)
     {
-        $string = $query->getSQL();
-        $data = $query->getParameters();
-
-        self::dumpSql($string, $data);
+        SqlDumper::dumpQuery($query);
     }
 
     /**
      * dump query with parameters in it
      *
      * @param string $sql
-     * @param array $params
+     * @param array  $params
+     *
+     * @deprecated use SqlDumper::dumpSql()
      */
     public static function dumpSql($sql, array $params = [])
     {
-        if (!function_exists('dump')) {
-            trigger_error('You must install VarDumper to use SQL dumping');
-
-            return;
-        }
-        dump(self::getSqlWithParams($sql, $params));
+        SqlDumper::dumpSql($sql, $params);
     }
 }

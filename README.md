@@ -1,27 +1,27 @@
-
 DBALManager
 ===========
 
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/7d2b23a4-1c67-46d6-9ac2-9af69041f3cf/small.png)](https://insight.sensiolabs.com/projects/7d2b23a4-1c67-46d6-9ac2-9af69041f3cf)
 
-This class is a helper for Doctrine DBAL. It has been made maily to ease managing bulk imports. It provides a method to execute `INSERT ... ON DUPLICATE KEY UPDATE` query on MySQL-compatible databases, which is what I miss in Doctrine's MySQL driver.
+Set of helper classes for Doctrine DBAL. It has been made maily to ease creating bulk imports. It provides a method to execute `INSERT ... ON DUPLICATE KEY UPDATE` query on MySQL-compatible databases, which is what I miss in Doctrine's MySQL driver.
 
 
-Symfony2 installation:
-----------------------
+Symfony installation
+--------------------
 
-To use this class in Symfony2, please look at [DBALManagerBundle](https://github.com/JarJak/DBALManagerBundle)
+To use this class in Symfony 2/3, please look at [DBALManagerBundle](https://github.com/JarJak/DBALManagerBundle)
 
 
-Integration with other frameworks:
-----------------------------------
+Integration with other frameworks
+---------------------------------
 
 Run:
+
 ```
 composer require jarjak/dbal-manager
 ```
 
-The class is PSR-0 compatible, so it can be integrated easily with any modern framework.
+The class is PSR-0/PSR-4 compatible, so it can be integrated easily with any modern framework.
 Here is an example for Silex:
 
 ```php
@@ -29,13 +29,13 @@ Here is an example for Silex:
 
 $app['dbal_manager'] = $app->share(function ($app) {
     $manager = new JarJak\DBALManager();
-	$manager->setConnection($app['db']);
-	return $manager;
+    $manager->setConnection($app['db']);
+    return $manager;
 });
 ```
 
-Example usage:
---------------
+Example usage
+-------------
 
 Lets say we have user table with: 
 - unique usernames and emails
@@ -44,15 +44,15 @@ Lets say we have user table with:
 
 ```php
 $sqlArray = [
-	'username' => 'JohnKennedy',
-	'email' => 'john@kennedy.gov',
-	'password' => $password,
-	'address' => '',
-	'active' => 0,
+    'username' => 'JohnKennedy',
+    'email' => 'john@kennedy.gov',
+    'password' => $password,
+    'address' => '',
+    'active' => 0,
 ];
 
-/* @var $DBALManager JarJak\DBALManager */
-$DBALManager->insertOrUpdateByArray('user', $sqlArray, 2, ['active']);
+/* @var $manager JarJak\DBALManager */
+$manager->insertOrUpdateByArray('user', $sqlArray, 2, ['active']);
 ```
 
 Dumping Queries
@@ -62,11 +62,20 @@ DBALManager can use VarDumper to dump SQL queries from QueryBuilder ready to be 
 
 ```php
 /* @var QueryBuilder $queryBuilder */
-\JarJak\DBALManager::dumpQuery($queryBuilder);
+\JarJak\SqlDumper::dumpQuery($queryBuilder);
 ```
 
 If you don't use QueryBuilder you can still dump parametrized SQL with:
 
 ```php
-\JarJak\DBALManager::dumpSql($sql, $params);
+\JarJak\SqlDumper::dumpSql($sql, $params);
+```
+
+Testing
+-------
+
+Run tests with:
+
+```
+bin/vender/phpunit -v
 ```

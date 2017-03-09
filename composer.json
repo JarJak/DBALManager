@@ -1,6 +1,7 @@
 {
     "name": "jarjak/dbal-manager",
-    "description" : "Helper class for Doctrine DBAL",
+    "type": "library",
+    "description" : "Helper classes for Doctrine DBAL",
     "keywords": ["dbal", "database", "persistence", "queryobject"],
     "homepage": "https://github.com/JarJak/DBALManager",
     "license": "GPL-2.0",
@@ -10,16 +11,24 @@
             "email": "egger1991@gmail.com"
         }
     ],
+    "autoload": {
+        "psr-4": {
+            "JarJak\\": "src/JarJak",
+            "JarJak\\Tests\\": "tests/JarJak"
+        }
+    },
     "require": {
         "doctrine/dbal": "~2.4"
     },
     "require-dev": {
-        "symfony/var-dumper": "~2.6"
+        "symfony/var-dumper": "~2.6|~3.0",
+        "phpunit/phpunit": "^6.0"
     },
     "suggest": {
-        "symfony/var-dumper": "DBALManager uses VarDumper to nicely dump SQL queries"
+        "symfony/var-dumper": "DBALManager uses VarDumper to nicely dump SQL queries, however it fallbacks to var_dump",
+        "ext-symfony_debug": "even better way to nicely dump SQL queries"
     },
-    "autoload": {
-        "psr-0": { "JarJak": "src" }
+    "scripts": {
+        "post-update-cmd": "cp -n phpunit.xml.dist phpunit.xml"
     }
 }
