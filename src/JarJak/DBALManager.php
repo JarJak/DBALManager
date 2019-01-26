@@ -9,7 +9,7 @@ use Exception;
 use PDO;
 
 /**
- * universal helper class to simplify DBAL insert/update/select operations
+ * Universal helper class to simplify DBAL insert/update/select operations
  *
  * @package DBALManager
  * @author  Jarek Jakubowski <egger1991@gmail.com>
@@ -17,7 +17,7 @@ use PDO;
 class DBALManager
 {
     /**
-     * @var Statement
+     * @var Statement|null
      */
     protected $lastStatement;
 
@@ -25,6 +25,11 @@ class DBALManager
      * @var Connection
      */
     protected $conn;
+    
+    public function __construct(Connection $conn = null)
+    {
+        $this->conn = $conn;
+    }
 
     /**
      * @param Connection $conn
