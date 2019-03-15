@@ -36,6 +36,7 @@ class SqlPreparator
         }
 
         $cols = static::escapeSqlWords($cols);
+        $ignoreForUpdate = static::escapeSqlWords($ignoreForUpdate);
 
         $sql = "INSERT INTO " . static::escapeSqlWords($table) . " (";
         $sql .= implode(', ', $cols);
