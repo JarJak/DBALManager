@@ -10,7 +10,7 @@ Set of helper classes for Doctrine DBAL. It has been made maily to ease creating
 Symfony installation
 --------------------
 
-To use this class in Symfony 2/3, please look at [DBALManagerBundle](https://github.com/JarJak/DBALManagerBundle)
+To use this class in Symfony, please look at [DBALManagerBundle](https://github.com/JarJak/DBALManagerBundle)
 
 
 Integration with other frameworks
@@ -29,14 +29,33 @@ Here is an example for Silex:
 //Application.php
 
 $app['dbal_manager'] = $app->share(function ($app) {
-    $manager = new JarJak\DBALManager();
-    $manager->setConnection($app['db']);
+    $manager = new JarJak\DBALManager($app['db']);
     return $manager;
 });
 ```
 
-Example usage
--------------
+Simple example:
+---
+
+You want to insert data or update them if row already exists.
+
+```php
+$sqlArray = [
+	'id' => 1,
+	'username' => 'JohnKennedy',
+	'email' => 'john@kennedy.gov'
+];
+
+/* @var $manager JarJak\DBALManager */
+$manager->insertOrUpdateByArray('user', $sqlArray);
+```
+Or you want to just skip this row if it exists:
+```php
+$manager->insertIgnoreByArray('user', $sqlArray);
+```
+
+Advanced example:
+---
 
 Lets say we have user table with: 
 - unique usernames and emails
