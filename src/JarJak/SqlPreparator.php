@@ -36,6 +36,7 @@ class SqlPreparator
         }
 
         $cols = static::escapeSqlWords($cols);
+        $ignoreForUpdate = static::escapeSqlWords($ignoreForUpdate);
 
         $sql = "INSERT INTO " . static::escapeSqlWords($table) . " (";
         $sql .= implode(', ', $cols);
@@ -70,6 +71,8 @@ class SqlPreparator
     public static function prepareMultiInsertOrUpdate($table, array $rows, array $ignoreForUpdate = [])
     {
         $columns = static::extractColumnsFromRows($rows);
+        $columns = static::escapeSqlWords($columns);
+        $ignoreForUpdate = static::escapeSqlWords($ignoreForUpdate);
 
         /**
          * since PHP 7.1 this can look like:
@@ -77,7 +80,7 @@ class SqlPreparator
          */
         list($params, $valueParts) = array_values(static::generateMultiParams($rows, $columns));
 
-        $sql = 'INSERT INTO ' . $table;
+        $sql = 'INSERT INTO ' . static::escapeSqlWords($table);
         $sql .= ' (' . implode(', ', $columns) . ')';
         $sql .= " VALUES ";
         $sql .= implode(', ', $valueParts);
@@ -111,7 +114,6 @@ class SqlPreparator
         if (!$columns) {
             $columns = static::extractColumnsFromRows($rows);
         }
-
         $columns = static::escapeSqlWords($columns);
 
         list($params, $valueParts) = array_values(static::generateMultiParams($rows, $columns));
@@ -150,7 +152,7 @@ class SqlPreparator
         $sql .= implode(', ', $cols);
         $sql .= ") VALUES (";
         $sql .= implode(', ', $marks);
-        $sql .= ") ";
+        $sql .= ")";
 
         return ['sql' => $sql, 'params' => $params];
     }
@@ -172,7 +174,6 @@ class SqlPreparator
         if (!$columns) {
             $columns = static::extractColumnsFromRows($rows);
         }
-
         $columns = static::escapeSqlWords($columns);
 
         list($params, $valueParts) = array_values(static::generateMultiParams($rows, $columns));
@@ -218,7 +219,7 @@ class SqlPreparator
     public static function escapeSqlWords($input)
     {
         if (!$input) {
-            throw new Exception('Empty input');
+            return $input;
         }
 
         $escapeFunction = function ($value) {
@@ -267,7 +268,7 @@ class SqlPreparator
                 $marks[] = '?';
                 $params[] = $value;
             }
-            $valueParts[] = '(' . implode(',', $marks) . ')';
+            $valueParts[] = '(' . implode(', ', $marks) . ')';
         }
 
         return ['params' => $params, 'valueParts' => $valueParts];
