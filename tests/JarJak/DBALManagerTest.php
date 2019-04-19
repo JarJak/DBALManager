@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace JarJak\Tests;
 
 use Doctrine\DBAL\Connection;
@@ -7,7 +9,6 @@ use JarJak\DBALManager;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @package DBALManager
  * @author  Jarek Jakubowski <egger1991@gmail.com>
  */
 class DBALManagerTest extends TestCase
@@ -17,26 +18,26 @@ class DBALManagerTest extends TestCase
      */
     protected $conn;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->conn = $this->createMock(Connection::class);
     }
 
-    public function testInsertOrUpdateByArray()
+    public function testInsertOrUpdateByArray(): void
     {
         $dbal = $this->getDumbDbalManager();
         $res = $dbal->insertOrUpdateByArray('dumb_table', ['dumb' => 'value']);
-        $this->assertEquals(0, $res);
+        $this->assertSame(0, $res);
     }
 
-    public function testMultiInsertOrUpdateByArray()
+    public function testMultiInsertOrUpdateByArray(): void
     {
         $dbal = $this->getDumbDbalManager();
         $res = $dbal->multiInsertOrUpdateByArray('dumb_table', [['dumb' => 'value'], ['dumb' => 'value']]);
-        $this->assertEquals(0, $res);
+        $this->assertSame(0, $res);
     }
 
-    public function testMultiInsertOrUpdateByArrayReturnArray()
+    public function testMultiInsertOrUpdateByArrayReturnArray(): void
     {
         $dbal = $this->getDumbDbalManager();
         $res = $dbal->multiInsertOrUpdateByArray(
@@ -46,13 +47,16 @@ class DBALManagerTest extends TestCase
             false,
             true
         );
-        $this->assertEquals(['inserted' => 0, 'updated' => 0], $res);
+        $this->assertSame([
+            'inserted' => 0,
+            'updated' => 0,
+        ], $res);
     }
 
-    public function testInsertIgnoreByArray()
+    public function testInsertIgnoreByArray(): void
     {
         $res = $this->getDumbDbalManager()->insertIgnoreByArray('dumb_table', ['dumb' => 'value'], []);
-        $this->assertEquals(0, $res);
+        $this->assertSame(0, $res);
     }
 
     private function getDumbDbalManager()
