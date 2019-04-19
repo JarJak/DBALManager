@@ -29,6 +29,26 @@ class DBALManagerTest extends TestCase
         $this->assertEquals(0, $res);
     }
 
+    public function testMultiInsertOrUpdateByArray()
+    {
+        $dbal = $this->getDumbDbalManager();
+        $res = $dbal->multiInsertOrUpdateByArray('dumb_table', [['dumb' => 'value'], ['dumb' => 'value']]);
+        $this->assertEquals(0, $res);
+    }
+
+    public function testMultiInsertOrUpdateByArrayReturnArray()
+    {
+        $dbal = $this->getDumbDbalManager();
+        $res = $dbal->multiInsertOrUpdateByArray(
+            'dumb_table',
+            [['dumb' => 'value'], ['dumb' => 'value']],
+            0,
+            false,
+            true
+        );
+        $this->assertEquals(['inserted' => 0, 'updated' => 0], $res);
+    }
+
     public function testInsertIgnoreByArray()
     {
         $res = $this->getDumbDbalManager()->insertIgnoreByArray('dumb_table', ['dumb' => 'value'], []);
