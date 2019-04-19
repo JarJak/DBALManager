@@ -116,15 +116,14 @@ class DBALManager
      * @param array         $rows                   2-dimensional array of values to insert
      * @param int           $updateIgnoreCount      how many fields from beginning of array should be ignored on update
      *                                              (i.e. indexes) default: 1 (the ID)
-     * @param array|boolean $excludeAutoNullColumns array of columns that can contain zero-equal values,
-     *                                              set to false if you want to disable auto-null entirely [default: false]
-     * @param bool          $returnArray            instead of returning affected rows, returns ['inserted' => int, 'updated' => int]
+     * @param array|boolean $excludeAutoNullColumns array of columns that can contain zero-equal values, set to false
+     *                                              if you want to disable auto-null entirely [default: false]
      *
-     * @return int|array    number of affected rows or ['inserted' => int, 'updated' => int] if $returnArray = true
+     * @return int number of affected rows
      *
      * @throws Exception
      */
-    public function multiInsertOrUpdateByArray($table, array $rows, $updateIgnoreCount = 1, $excludeAutoNullColumns = false, $returnArray = false)
+    public function multiInsertOrUpdateByArray($table, array $rows, $updateIgnoreCount = 1, $excludeAutoNullColumns = false)
     {
         if (empty($rows)) {
             return 0;
@@ -142,20 +141,7 @@ class DBALManager
 
         list($sql, $params) = array_values(SqlPreparator::prepareMultiInsertOrUpdate($table, $rows, $ignoreForUpdate));
 
-        $affected =  $this->conn->executeUpdate($sql, $params);
-
-        if ($returnArray) {
-            $rowCount = count($rows);
-            $return = [
-                'inserted' => 0,
-                'updated' => 0,
-            ];
-            $result['updated'] = $affected - $rowCount;
-            $result['inserted'] = $rowCount - $result['updated'];
-            return $return;
-        } else {
-            return $affected;
-        }
+        return $this->conn->executeUpdate($sql, $params);
     }
 
     /**
