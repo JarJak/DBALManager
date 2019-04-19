@@ -35,12 +35,6 @@ class DBALManagerTest extends TestCase
         $this->assertEquals(0, $res);
     }
 
-    public function testDumb()
-    {
-        $this->assertInstanceOf(DBALManager::class, $this->getDumbDbalManager());
-        $this->markTestIncomplete('Create more tests for DBALManager itself');
-    }
-
     private function getDumbDbalManager()
     {
         $dbal = new DBALManager();
