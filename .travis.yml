@@ -27,6 +27,6 @@ matrix:
     - php: nightly
 
 install:
-  - travis_retry composer install
+  - composer install
 
 script: ./vendor/bin/phpunit
