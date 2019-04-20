@@ -56,11 +56,11 @@ $sqlArray = [
 ];
 
 /* @var $manager JarJak\DBALManager */
-$manager->insertOrUpdateByArray('user', $sqlArray);
+$manager->insertOrUpdate('user', $sqlArray);
 ```
 Or you want to just skip this row if it exists:
 ```php
-$manager->insertIgnoreByArray('user', $sqlArray);
+$manager->insertIgnore('user', $sqlArray);
 ```
 
 Advanced example:
@@ -81,7 +81,7 @@ $sqlArray = [
 ];
 
 /* @var $manager JarJak\DBALManager */
-$manager->insertOrUpdateByArray('user', $sqlArray, 2, ['active']);
+$manager->insertOrUpdate('user', $sqlArray, 2, ['active']);
 ```
 
 Dumping Queries

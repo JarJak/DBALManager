@@ -34,25 +34,25 @@ class DBALManager
     /**
      * executes "INSERT...ON DUPLICATE KEY UPDATE" sql statement by array of parameters
      *
-     * @param string     $table                  table name
-     * @param array      $values                 values
-     * @param int        $updateIgnoreCount      how many fields from beginning of array should be ignored on update
-     *                                           (i.e. indexes) default: 1 (the ID)
-     * @param array|null $excludeAutoNullColumns array of columns that can contain zero-equal values, set to null
-     *                                           if you want to disable auto-null entirely [default: null]
+     * @param string     $table               table name
+     * @param array      $values              values
+     * @param int        $updateIgnoreCount   how many fields from beginning of array should be ignored on update
+     *                                        (i.e. indexes) default: 1 (the ID)
+     * @param array|null $excludeEmptyColumns array of columns that can contain zero-equal values, set to null
+     *                                        if you want to disable auto-null entirely [default: null]
      *
      * @return string|int InsertId
      *
      * @see http://stackoverflow.com/questions/778534/mysql-on-duplicate-key-last-insert-id
      */
-    public function insertOrUpdateByArray(
+    public function insertOrUpdate(
         string $table,
         array $values,
         int $updateIgnoreCount = 1,
-        ?array $excludeAutoNullColumns = null
+        ?array $excludeEmptyColumns = null
     ) {
-        if (false !== $excludeAutoNullColumns) {
-            $values = SqlPreparator::setNullValues($values, $excludeAutoNullColumns);
+        if (null !== $excludeEmptyColumns) {
+            $values = SqlPreparator::setNullValues($values, $excludeEmptyColumns);
         }
 
         if ($updateIgnoreCount) {
@@ -63,14 +63,14 @@ class DBALManager
 
         [$sql, $params] = array_values(SqlPreparator::prepareInsertOrUpdate($table, $values, $ignoreForUpdate));
 
-        $this->lastStatement = $this->conn->executeQuery($sql, $params);
+        $this->lastStatement = $this->conn->executeUpdate($sql, $params);
 
         return $this->getLastInsertId();
     }
 
     /**
      * returns if row has been updated or inserted
-     * can only be called after insertOrUpdateByArray, throws DBALManagerException otherwise
+     * can only be called after insertOrUpdate, throws DBALManagerException otherwise
      *
      * @return bool|null true if updated, false if inserted, null if nothing happened
      *
@@ -81,7 +81,7 @@ class DBALManager
     public function hasBeenUpdated(): ?bool
     {
         if (! $this->lastStatement) {
-            throw new DBALManagerException('This method should be called only after insertOrUpdateByArray.');
+            throw new DBALManagerException('This method should be called only after insertOrUpdate.');
         }
 
         $rowCount = $this->lastStatement->rowCount();
@@ -93,38 +93,38 @@ class DBALManager
             return null;
         }
 
-        throw new DBALManagerException('This method should be called only after insertOrUpdateByArray. Got rowCount result: ' . $rowCount);
+        throw new DBALManagerException('This method should be called only after insertOrUpdate. Got rowCount result: ' . $rowCount);
     }
 
     /**
      * executes "INSERT...ON DUPLICATE KEY UPDATE" sql statement by multi array of values
      * to be used for bulk inserts
      *
-     * @param string     $table                  table name
-     * @param array      $rows                   2-dimensional array of values to insert
-     * @param int        $updateIgnoreCount      how many fields from beginning of array should be ignored on update
-     *                                           (i.e. indexes) default: 1 (the ID)
-     * @param array|bool $excludeAutoNullColumns array of columns that can contain zero-equal values,
-     *                                           set to null if you want to disable auto-null entirely [default: null]
-     * @param bool       $returnArray            instead of returning affected rows, returns ['inserted' => int, 'updated' => int]
+     * @param string     $table               table name
+     * @param array      $rows                2-dimensional array of values to insert
+     * @param int        $updateIgnoreCount   how many fields from beginning of array should be ignored on update
+     *                                        (i.e. indexes) default: 1 (the ID)
+     * @param array|null $excludeEmptyColumns array of columns that can contain zero-equal values,
+     *                                        set to null if you want to disable auto-null entirely [default: null]
+     * @param bool       $returnAsArray       instead of returning affected rows, returns ['inserted' => int, 'updated' => int]
      *
-     * @return int|array number of affected rows or ['inserted' => int, 'updated' => int] if $returnArray = true
+     * @return int|array number of affected rows or ['inserted' => int, 'updated' => int] if $returnAsArray = true
      *
      * @throws DBALManagerException
      */
-    public function multiInsertOrUpdateByArray(
+    public function multiInsertOrUpdate(
         string $table,
         array $rows,
         int $updateIgnoreCount = 1,
-        ?bool $excludeAutoNullColumns = null,
-        bool $returnArray = false
+        ?array $excludeEmptyColumns = null,
+        bool $returnAsArray = false
     ) {
         if (empty($rows)) {
             return 0;
         }
 
-        if (null !== $excludeAutoNullColumns) {
-            $rows = SqlPreparator::setNullValues($rows, $excludeAutoNullColumns);
+        if (null !== $excludeEmptyColumns) {
+            $rows = SqlPreparator::setNullValues($rows, $excludeEmptyColumns);
         }
 
         if ($updateIgnoreCount) {
@@ -137,16 +137,17 @@ class DBALManager
 
         $affected = $this->conn->executeUpdate($sql, $params);
 
-        if ($returnArray) {
+        if ($returnAsArray) {
             $rowCount = count($rows);
-            $return = [
+            $result = [
                 'inserted' => 0,
                 'updated' => 0,
             ];
-            $result['updated'] = $affected - $rowCount;
+            $result['updated'] = $rowCount - $affected;
             $result['inserted'] = $rowCount - $result['updated'];
-            return $return;
+            return $result;
         }
+
         return $affected;
     }
 
@@ -162,7 +163,7 @@ class DBALManager
      *
      * @throws DBALManagerException
      */
-    public function multiInsertByArray(string $table, array $rows, array $columns = []): int
+    public function multiInsert(string $table, array $rows, array $columns = []): int
     {
         if (empty($rows)) {
             return 0;
@@ -176,22 +177,22 @@ class DBALManager
     /**
      * executes "INSERT IGNORE" sql statement by array of parameters
      *
-     * @param string     $table                  table name
-     * @param array      $values                 values
-     * @param array|null $excludeAutoNullColumns array of columns that can contain zero-equal values, set to null
-     *                                           if you want to disable auto-null entirely [default: null]
+     * @param string     $table               table name
+     * @param array      $values              values
+     * @param array|null $excludeEmptyColumns array of columns that can contain zero-equal values, set to null
+     *                                        if you want to disable auto-null entirely [default: null]
      *
-     * @return int InsertId
+     * @return int|string InsertId
      */
-    public function insertIgnoreByArray(string $table, array $values, ?bool $excludeAutoNullColumns = null): int
+    public function insertIgnore(string $table, array $values, ?array $excludeEmptyColumns = null)
     {
-        if (null !== $excludeAutoNullColumns) {
-            $values = SqlPreparator::setNullValues($values, $excludeAutoNullColumns);
+        if (null !== $excludeEmptyColumns) {
+            $values = SqlPreparator::setNullValues($values, $excludeEmptyColumns);
         }
 
         [$sql, $params] = array_values(SqlPreparator::prepareInsertIgnore($table, $values));
 
-        $this->conn->executeQuery($sql, $params);
+        $this->conn->executeUpdate($sql, $params);
 
         return $this->getLastInsertId();
     }
@@ -208,7 +209,7 @@ class DBALManager
      *
      * @throws DBALManagerException
      */
-    public function multiInsertIgnoreByArray(string $table, array $rows, array $columns = []): int
+    public function multiInsertIgnore(string $table, array $rows, array $columns = []): int
     {
         if (empty($rows)) {
             return 0;
@@ -231,11 +232,9 @@ class DBALManager
     /**
      * fetch one column from all rows
      *
-     * @param string $sql
-     *
      * @return array [value1, value2, ...]
      */
-    public function fetchAllColumn($sql, array $params = [], array $types = []): array
+    public function fetchAllColumn(string $sql, array $params = [], array $types = []): array
     {
         $stmt = $this->conn->executeQuery($sql, $params, $types);
 
@@ -245,11 +244,9 @@ class DBALManager
     /**
      * fetch first two columns as an associative array from all rows
      *
-     * @param string $sql
-     *
      * @return array [key1 => value1, key2 => value2, ...]
      */
-    public function fetchAllKeyPair($sql, array $params = [], array $types = []): array
+    public function fetchAllKeyPair(string $sql, array $params = [], array $types = []): array
     {
         $stmt = $this->conn->executeQuery($sql, $params, $types);
 
@@ -259,11 +256,9 @@ class DBALManager
     /**
      * fetch all rows result set as an associative array, indexed by first column
      *
-     * @param string $sql
-     *
      * @return array [key1 => row1, key2 => row2, ...]
      */
-    public function fetchAllAssoc($sql, array $params = [], array $types = []): array
+    public function fetchAllAssoc(string $sql, array $params = [], array $types = []): array
     {
         $stmt = $this->conn->executeQuery($sql, $params, $types);
 
