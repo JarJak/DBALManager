@@ -10,7 +10,16 @@ Set of helper classes for Doctrine DBAL. It has been made maily to ease creating
 Symfony installation
 --------------------
 
-To use this class in Symfony, please look at [DBALManagerBundle](https://github.com/JarJak/DBALManagerBundle)
+To use this class in Symfony 2/3, please look at [DBALManagerBundle](https://github.com/JarJak/DBALManagerBundle).
+
+In Symfony 4, thanks to autowiring you don't need a bundle, just add these lines in your `services.yaml`:
+```yaml
+services:
+    _defaults:
+        autowire: true
+        
+    JarJak\DBALManager: ~
+```
 
 
 Integration with other frameworks
@@ -97,5 +106,11 @@ Testing
 Run tests with:
 
 ```
-vendor/bin/phpunit -v
+composer run-script test
+```
+
+Fix code style with:
+
+```
+composer run-script csfix
 ```

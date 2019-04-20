@@ -61,8 +61,6 @@ class DBALManagerTest extends TestCase
 
     private function getDumbDbalManager()
     {
-        $dbal = new DBALManager();
-        $dbal->setConnection($this->conn);
-        return $dbal;
+        return new DBALManager($this->conn);
     }
 }

@@ -11,16 +11,6 @@
             "email": "egger1991@gmail.com"
         }
     ],
-    "autoload": {
-        "psr-4": {
-            "JarJak\\": "src/JarJak"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "JarJak\\Tests\\": "tests/JarJak"
-        }
-    },
     "require": {
         "php": ">7.1",
         "ext-pdo": "*",
@@ -29,7 +19,6 @@
     "require-dev": {
         "phpstan/phpstan": "^0.11",
         "phpunit/phpunit": "^7.0",
-        "roave/security-advisories": "dev-master@dev",
         "symfony/var-dumper": "^3.4|^4.0",
         "symplify/easy-coding-standard": "^5.4.14"
     },
@@ -39,7 +28,10 @@
     },
     "scripts": {
         "post-update-cmd": "cp -n phpunit.xml.dist phpunit.xml",
-        "test": "vendor/bin/phpunit",
+        "test": [
+            "vendor/bin/phpunit",
+            "@cscheck"
+        ],
         "cscheck": [
             "php -d memory_limit=1024M vendor/bin/ecs check src",
             "php -d memory_limit=1024M vendor/bin/ecs check tests",
@@ -50,5 +42,15 @@
             "php -d memory_limit=1024M vendor/bin/ecs check tests --fix",
             "vendor/bin/phpstan --memory-limit=1G analyse -c phpstan.neon src"
         ]
+    },
+    "autoload": {
+        "psr-4": {
+            "JarJak\\": "src/JarJak"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "JarJak\\Tests\\": "tests/JarJak"
+        }
     }
 }
