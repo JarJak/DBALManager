@@ -146,13 +146,13 @@ class DBALManager
 
         if ($returnArray) {
             $rowCount = count($rows);
-            $return = [
+            $result = [
                 'inserted' => 0,
                 'updated' => 0,
             ];
             $result['updated'] = $affected - $rowCount;
             $result['inserted'] = $rowCount - $result['updated'];
-            return $return;
+            return $result;
         } else {
             return $affected;
         }
