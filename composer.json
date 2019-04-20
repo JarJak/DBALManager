@@ -12,7 +12,7 @@
         }
     ],
     "require": {
-        "php": ">7.1",
+        "php": ">=7.1",
         "ext-pdo": "*",
         "doctrine/dbal": "^2.4"
     },
@@ -20,7 +20,7 @@
         "phpstan/phpstan": "^0.11",
         "phpunit/phpunit": "^7.0",
         "symfony/var-dumper": "^3.4|^4.0",
-        "symplify/easy-coding-standard": "^5.4.14"
+        "symplify/easy-coding-standard": "^5.4"
     },
     "suggest": {
         "symfony/var-dumper": "DBALManager uses VarDumper to nicely dump SQL queries, however it fallbacks to var_dump",
