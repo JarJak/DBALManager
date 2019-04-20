@@ -1,17 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace JarJak;
 
-use Exception;
+use JarJak\Exception\DBALManagerException;
 
 /**
  * Separated class to ease testing and wrapping prepared SQLs into your own DB Abstraction
  *
- * @package DBALManager
  * @author  Jarek Jakubowski <egger1991@gmail.com>
  */
 class SqlPreparator
 {
+    private function __construct()
+    {
+    }
+
     /**
      * prepares "INSERT...ON DUPLICATE KEY UPDATE" sql statement by array of parameters
      *
@@ -21,9 +26,9 @@ class SqlPreparator
      *
      * @return array [sql, params] prepared SQL and params
      *
-     * @link http://stackoverflow.com/questions/778534/mysql-on-duplicate-key-last-insert-id
+     * @see http://stackoverflow.com/questions/778534/mysql-on-duplicate-key-last-insert-id
      */
-    public static function prepareInsertOrUpdate($table, array $values, array $ignoreForUpdate = [])
+    public static function prepareInsertOrUpdate(string $table, array $values, array $ignoreForUpdate = []): array
     {
         $cols = [];
         $params = [];
@@ -38,22 +43,25 @@ class SqlPreparator
         $cols = static::escapeSqlWords($cols);
         $ignoreForUpdate = static::escapeSqlWords($ignoreForUpdate);
 
-        $sql = "INSERT INTO " . static::escapeSqlWords($table) . " (";
+        $sql = 'INSERT INTO ' . static::escapeSqlWords($table) . ' (';
         $sql .= implode(', ', $cols);
-        $sql .= ") VALUES (";
+        $sql .= ') VALUES (';
         $sql .= implode(', ', $marks);
-        $sql .= ") ON DUPLICATE KEY UPDATE ";
+        $sql .= ') ON DUPLICATE KEY UPDATE ';
 
         $updateArray = [];
         foreach ($cols as $col) {
-            if (!in_array($col, $ignoreForUpdate)) {
-                $updateArray[] = "$col=VALUES($col)";
+            if (! in_array($col, $ignoreForUpdate, true)) {
+                $updateArray[] = "${col}=VALUES(${col})";
             }
         }
         $sql .= implode(', ', $updateArray);
-        $sql .= ", id=LAST_INSERT_ID(id)";
+        $sql .= ', id=LAST_INSERT_ID(id)';
 
-        return ['sql' => $sql, 'params' => $params];
+        return [
+            'sql' => $sql,
+            'params' => $params,
+        ];
     }
 
     /**
@@ -66,9 +74,9 @@ class SqlPreparator
      *
      * @return array [sql, params] prepared SQL and params
      *
-     * @throws Exception when number of columns and values does not match
+     * @throws DBALManagerException when number of columns and values does not match
      */
-    public static function prepareMultiInsertOrUpdate($table, array $rows, array $ignoreForUpdate = [])
+    public static function prepareMultiInsertOrUpdate(string $table, array $rows, array $ignoreForUpdate = []): array
     {
         $columns = static::extractColumnsFromRows($rows);
         $columns = static::escapeSqlWords($columns);
@@ -78,23 +86,26 @@ class SqlPreparator
          * since PHP 7.1 this can look like:
          * ['params' => $params, 'valueParts' => $valueParts] = static::generateMultiParams($rows, $columns)
          */
-        list($params, $valueParts) = array_values(static::generateMultiParams($rows, $columns));
+        [$params, $valueParts] = array_values(static::generateMultiParams($rows, $columns));
 
         $sql = 'INSERT INTO ' . static::escapeSqlWords($table);
         $sql .= ' (' . implode(', ', $columns) . ')';
-        $sql .= " VALUES ";
+        $sql .= ' VALUES ';
         $sql .= implode(', ', $valueParts);
-        $sql .= " ON DUPLICATE KEY UPDATE ";
+        $sql .= ' ON DUPLICATE KEY UPDATE ';
 
         $updateArray = [];
         foreach ($columns as $col) {
-            if (!in_array($col, $ignoreForUpdate)) {
-                $updateArray[] = "$col=VALUES($col)";
+            if (! in_array($col, $ignoreForUpdate, true)) {
+                $updateArray[] = "${col}=VALUES(${col})";
             }
         }
         $sql .= implode(', ', $updateArray);
 
-        return ['sql' => $sql, 'params' => $params];
+        return [
+            'sql' => $sql,
+            'params' => $params,
+        ];
     }
 
     /**
@@ -107,23 +118,26 @@ class SqlPreparator
      *
      * @return array [sql, params] prepared SQL and params
      *
-     * @throws Exception when number of columns and values does not match
+     * @throws DBALManagerException when number of columns and values does not match
      */
-    public static function prepareMultiInsert($table, array $rows, array $columns = [])
+    public static function prepareMultiInsert(string $table, array $rows, array $columns = []): array
     {
-        if (!$columns) {
+        if (! $columns) {
             $columns = static::extractColumnsFromRows($rows);
         }
         $columns = static::escapeSqlWords($columns);
 
-        list($params, $valueParts) = array_values(static::generateMultiParams($rows, $columns));
+        [$params, $valueParts] = array_values(static::generateMultiParams($rows, $columns));
 
-        $sql = "INSERT INTO " . static::escapeSqlWords($table) . " (";
+        $sql = 'INSERT INTO ' . static::escapeSqlWords($table) . ' (';
         $sql .= implode(', ', $columns);
-        $sql .= ") VALUES ";
+        $sql .= ') VALUES ';
         $sql .= implode(', ', $valueParts);
 
-        return ['sql' => $sql, 'params' => $params];
+        return [
+            'sql' => $sql,
+            'params' => $params,
+        ];
     }
 
     /**
@@ -134,7 +148,7 @@ class SqlPreparator
      *
      * @return array [sql, params] prepared SQL and params
      */
-    public static function prepareInsertIgnore($table, array $values)
+    public static function prepareInsertIgnore(string $table, array $values): array
     {
         $cols = [];
         $params = [];
@@ -148,13 +162,16 @@ class SqlPreparator
 
         $cols = static::escapeSqlWords($cols);
 
-        $sql = "INSERT IGNORE INTO " . static::escapeSqlWords($table) . " (";
+        $sql = 'INSERT IGNORE INTO ' . static::escapeSqlWords($table) . ' (';
         $sql .= implode(', ', $cols);
-        $sql .= ") VALUES (";
+        $sql .= ') VALUES (';
         $sql .= implode(', ', $marks);
-        $sql .= ")";
+        $sql .= ')';
 
-        return ['sql' => $sql, 'params' => $params];
+        return [
+            'sql' => $sql,
+            'params' => $params,
+        ];
     }
 
     /**
@@ -167,39 +184,40 @@ class SqlPreparator
      *
      * @return array [sql, params] prepared SQL and params
      *
-     * @throws Exception when number of columns and values does not match
+     * @throws DBALManagerException when number of columns and values does not match
      */
-    public static function prepareMultiInsertIgnore($table, array $rows, array $columns = [])
+    public static function prepareMultiInsertIgnore(string $table, array $rows, array $columns = []): array
     {
-        if (!$columns) {
+        if (! $columns) {
             $columns = static::extractColumnsFromRows($rows);
         }
         $columns = static::escapeSqlWords($columns);
 
-        list($params, $valueParts) = array_values(static::generateMultiParams($rows, $columns));
+        [$params, $valueParts] = array_values(static::generateMultiParams($rows, $columns));
 
-        $sql = "INSERT IGNORE INTO " . static::escapeSqlWords($table) . " (";
+        $sql = 'INSERT IGNORE INTO ' . static::escapeSqlWords($table) . ' (';
         $sql .= implode(', ', $columns);
-        $sql .= ") VALUES ";
+        $sql .= ') VALUES ';
         $sql .= implode(', ', $valueParts);
 
-        return ['sql' => $sql, 'params' => $params];
+        return [
+            'sql' => $sql,
+            'params' => $params,
+        ];
     }
 
     /**
      * @param array $params        sql params to parse
-     * @param array $ignoreColumns columns that should be ignored in this function, like those where zero is accepted
-     *                             value
-     *
-     * @return array
+     * @param array $ignoreColumns columns that should be ignored in this function, like those where zero is
+     *                             an accepted value
      */
-    public static function setNullValues(array $params, array $ignoreColumns = [])
+    public static function setNullValues(array $params, array $ignoreColumns = []): array
     {
         foreach ($params as $k => $v) {
             if (is_array($v)) {
                 $params[$k] = static::setNullValues($v, $ignoreColumns);
             }
-            if (!$v && !in_array($k, $ignoreColumns)) {
+            if (! $v && ! in_array($k, $ignoreColumns, true)) {
                 $params[$k] = null;
             }
         }
@@ -214,11 +232,11 @@ class SqlPreparator
      *
      * @return array|string
      *
-     * @throws Exception when input is empty
+     * @throws DBALManagerException when input is empty
      */
     public static function escapeSqlWords($input)
     {
-        if (!$input) {
+        if (! $input) {
             return $input;
         }
 
@@ -228,30 +246,24 @@ class SqlPreparator
 
         if (is_array($input)) {
             return array_map($escapeFunction, $input);
-        } else {
-            return $escapeFunction($input);
         }
+        return $escapeFunction($input);
     }
 
     /**
-     * @param array $rows
-     *
      * @return array columns
      */
-    public static function extractColumnsFromRows(array $rows)
+    public static function extractColumnsFromRows(array $rows): array
     {
         return array_keys(current($rows));
     }
 
     /**
-     * @param array $rows
-     * @param array $columns
-     *
      * @return array [params, valueParts]
      *
-     * @throws Exception when number of columns and values does not match
+     * @throws DBALManagerException when number of columns and values does not match
      */
-    protected static function generateMultiParams(array $rows, array $columns)
+    protected static function generateMultiParams(array $rows, array $columns): array
     {
         //for integrity check
         $count = count($columns);
@@ -261,7 +273,7 @@ class SqlPreparator
 
         foreach ($rows as $row) {
             if (count($row) !== $count) {
-                throw new Exception("Number of columns and values does not match.");
+                throw new DBALManagerException('Number of columns and values does not match.');
             }
             $marks = [];
             foreach ($row as $value) {
@@ -271,6 +283,9 @@ class SqlPreparator
             $valueParts[] = '(' . implode(', ', $marks) . ')';
         }
 
-        return ['params' => $params, 'valueParts' => $valueParts];
+        return [
+            'params' => $params,
+            'valueParts' => $valueParts,
+        ];
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace JarJak\Tests;
 
 use Doctrine\DBAL\Connection;
@@ -7,7 +9,6 @@ use JarJak\DBALManager;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @package DBALManager
  * @author  Jarek Jakubowski <egger1991@gmail.com>
  */
 class DBALManagerTest extends TestCase
@@ -17,48 +18,35 @@ class DBALManagerTest extends TestCase
      */
     protected $conn;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->conn = $this->createMock(Connection::class);
+        $this->conn->method('executeUpdate')->willReturn(1);
+        $this->conn->method('lastInsertId')->willReturn(1);
     }
 
-    public function testInsertOrUpdateByArray()
+    public function testInsertOrUpdate(): void
     {
         $dbal = $this->getDumbDbalManager();
-        $res = $dbal->insertOrUpdateByArray('dumb_table', ['dumb' => 'value']);
-        $this->assertEquals(0, $res);
+        $res = $dbal->insertOrUpdate('dumb_table', ['dumb' => 'value']);
+        $this->assertSame(1, $res);
     }
 
-    public function testMultiInsertOrUpdateByArray()
+    public function testMultiInsertOrUpdate(): void
     {
         $dbal = $this->getDumbDbalManager();
-        $res = $dbal->multiInsertOrUpdateByArray('dumb_table', [['dumb' => 'value'], ['dumb' => 'value']]);
-        $this->assertEquals(0, $res);
+        $res = $dbal->multiInsertOrUpdate('dumb_table', [['dumb' => 'value'], ['dumb' => 'value']]);
+        $this->assertSame(1, $res);
     }
 
-    public function testMultiInsertOrUpdateByArrayReturnArray()
+    public function testInsertIgnore(): void
     {
-        $dbal = $this->getDumbDbalManager();
-        $res = $dbal->multiInsertOrUpdateByArray(
-            'dumb_table',
-            [['dumb' => 'value'], ['dumb' => 'value']],
-            0,
-            false,
-            true
-        );
-        $this->assertEquals(['inserted' => 0, 'updated' => 0], $res);
-    }
-
-    public function testInsertIgnoreByArray()
-    {
-        $res = $this->getDumbDbalManager()->insertIgnoreByArray('dumb_table', ['dumb' => 'value'], []);
-        $this->assertEquals(0, $res);
+        $res = $this->getDumbDbalManager()->insertIgnore('dumb_table', ['dumb' => 'value'], []);
+        $this->assertSame(1, $res);
     }
 
     private function getDumbDbalManager()
     {
-        $dbal = new DBALManager();
-        $dbal->setConnection($this->conn);
-        return $dbal;
+        return new DBALManager($this->conn);
     }
 }

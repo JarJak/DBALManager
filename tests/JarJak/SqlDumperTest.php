@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace JarJak\Tests;
 
 use Doctrine\DBAL\Connection;
@@ -8,7 +10,6 @@ use JarJak\SqlDumper;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @package DBALManager
  * @author  Jarek Jakubowski <egger1991@gmail.com>
  */
 class SqlDumperTest extends TestCase
@@ -18,26 +19,26 @@ class SqlDumperTest extends TestCase
      */
     protected $conn;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->conn = $this->createMock(Connection::class);
     }
 
-    public function testGetQuery()
+    public function testGetQuery(): void
     {
         $qb = $this->getDumbQueryBuilder();
         $res = SqlDumper::getQuery($qb);
-        $expected = "SELECT * FROM dumb_table WHERE id = 1";
-        $this->assertEquals($expected, $res);
+        $expected = 'SELECT * FROM dumb_table WHERE id = 1';
+        $this->assertSame($expected, $res);
     }
 
-    public function testGetSqlWithParams()
+    public function testGetSqlWithParams(): void
     {
-        $sql = "SELECT * FROM dumb_table WHERE id = :id";
+        $sql = 'SELECT * FROM dumb_table WHERE id = :id';
         $params = ['id' => 2];
         $res = SqlDumper::getSqlWithParams($sql, $params);
-        $expected = "SELECT * FROM dumb_table WHERE id = 2";
-        $this->assertEquals($expected, $res);
+        $expected = 'SELECT * FROM dumb_table WHERE id = 2';
+        $this->assertSame($expected, $res);
     }
 
     private function getDumbQueryBuilder()

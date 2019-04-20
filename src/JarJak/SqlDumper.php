@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace JarJak;
 
 use Doctrine\DBAL\Query\QueryBuilder;
@@ -7,26 +9,24 @@ use Doctrine\DBAL\Query\QueryBuilder;
 /**
  * Use these to get SQL ready to capy-paste, with parameters already in it
  *
- * @package DBALManager
  * @author  Jarek Jakubowski <egger1991@gmail.com>
  */
 class SqlDumper
 {
+    private function __construct()
+    {
+    }
+
     /**
      * get query with parameters in it
-     *
-     * @param string $sql
-     * @param array  $params
-     *
-     * @return string
      */
-    public static function getSqlWithParams($sql, array $params = [])
+    public static function getSqlWithParams(string $sql, array $params = []): string
     {
-        if (!empty($params)) {
-            $indexed = ($params == array_values($params));
+        if (! empty($params)) {
+            $indexed = ($params === array_values($params));
             foreach ($params as $k => $v) {
                 if (is_string($v)) {
-                    $v = "'$v'";
+                    $v = "'${v}'";
                 }
                 if (is_array($v)) {
                     $v = "'" . implode("','", $v) . "'";
@@ -34,45 +34,34 @@ class SqlDumper
                 if ($indexed) {
                     $sql = preg_replace('/\?/', $v, $sql, 1);
                 } else {
-                    $sql = str_replace(":$k", $v, $sql);
+                    $sql = str_replace(":${k}", $v, $sql);
                 }
             }
         }
 
-        $sql = str_replace(PHP_EOL, '', $sql);
-
-        return $sql;
+        return str_replace(PHP_EOL, '', $sql);
     }
 
     /**
      * get query with parameters in it based on QueryBuilder
-     *
-     * @param QueryBuilder $qb
-     *
-     * @return string
      */
-    public static function getQuery(QueryBuilder $qb)
+    public static function getQuery(QueryBuilder $qb): string
     {
         return static::getSqlWithParams($qb->getSQL(), $qb->getParameters());
     }
 
     /**
      * dump query with parameters in it based on QueryBuilder
-     *
-     * @param QueryBuilder $query
      */
-    public static function dumpQuery(QueryBuilder $query)
+    public static function dumpQuery(QueryBuilder $query): void
     {
         static::dump(static::getQuery($query));
     }
 
     /**
      * dump query with parameters in it
-     *
-     * @param string $sql
-     * @param array  $params
      */
-    public static function dumpSql($sql, array $params = [])
+    public static function dumpSql(string $sql, array $params = []): void
     {
         static::dump(static::getSqlWithParams($sql, $params));
     }
@@ -80,10 +69,8 @@ class SqlDumper
     /**
      * wrapper for dump() function from VarDumper
      * fallbacks to var_dump
-     *
-     * @param $var
      */
-    public static function dump($var)
+    public static function dump($var): void
     {
         if (function_exists('dump')) {
             dump($var);

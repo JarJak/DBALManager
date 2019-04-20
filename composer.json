@@ -11,6 +11,38 @@
             "email": "egger1991@gmail.com"
         }
     ],
+    "require": {
+        "php": ">=7.1",
+        "ext-pdo": "*",
+        "doctrine/dbal": "^2.4"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^0.11",
+        "phpunit/phpunit": "^7.0",
+        "symfony/var-dumper": "^3.4|^4.0",
+        "symplify/easy-coding-standard": "^5.4"
+    },
+    "suggest": {
+        "symfony/var-dumper": "DBALManager uses VarDumper to nicely dump SQL queries, however it fallbacks to var_dump",
+        "ext-symfony_debug": "even better way to nicely dump SQL queries"
+    },
+    "scripts": {
+        "post-update-cmd": "cp -n phpunit.xml.dist phpunit.xml",
+        "test": [
+            "vendor/bin/phpunit",
+            "@cscheck"
+        ],
+        "cscheck": [
+            "php -d memory_limit=1024M vendor/bin/ecs check src",
+            "php -d memory_limit=1024M vendor/bin/ecs check tests",
+            "vendor/bin/phpstan --memory-limit=1G analyse -c phpstan.neon src"
+        ],
+        "csfix": [
+            "php -d memory_limit=1024M vendor/bin/ecs check src --fix",
+            "php -d memory_limit=1024M vendor/bin/ecs check tests --fix",
+            "vendor/bin/phpstan --memory-limit=1G analyse -c phpstan.neon src"
+        ]
+    },
     "autoload": {
         "psr-4": {
             "JarJak\\": "src/JarJak"
@@ -20,19 +52,5 @@
         "psr-4": {
             "JarJak\\Tests\\": "tests/JarJak"
         }
-    },
-    "require": {
-        "doctrine/dbal": "^2.4"
-    },
-    "require-dev": {
-        "symfony/var-dumper": "^2.6|^3.0|^4.0",
-        "phpunit/phpunit": "^5.7"
-    },
-    "suggest": {
-        "symfony/var-dumper": "DBALManager uses VarDumper to nicely dump SQL queries, however it fallbacks to var_dump",
-        "ext-symfony_debug": "even better way to nicely dump SQL queries"
-    },
-    "scripts": {
-        "post-update-cmd": "cp -n phpunit.xml.dist phpunit.xml"
     }
 }
