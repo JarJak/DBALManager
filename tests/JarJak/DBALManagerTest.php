@@ -46,7 +46,7 @@ class DBALManagerTest extends TestCase
             false,
             true
         );
-        $this->assertEquals(['inserted' => 0, 'updated' => 0], $res);
+        $this->assertEquals(['inserted' => 0, 'updated' => 2], $res);
     }
 
     public function testInsertIgnoreByArray()

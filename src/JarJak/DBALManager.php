@@ -25,7 +25,7 @@ class DBALManager
      * @var Connection
      */
     protected $conn;
-    
+
     public function __construct(Connection $conn = null)
     {
         $this->conn = $conn;
@@ -150,8 +150,13 @@ class DBALManager
                 'inserted' => 0,
                 'updated' => 0,
             ];
-            $result['updated'] = $affected - $rowCount;
-            $result['inserted'] = $rowCount - $result['updated'];
+            if ($affected > $rowCount) {
+                $result['updated'] = $affected - $rowCount;
+                $result['inserted'] = $rowCount - $result['updated'];
+            } else {
+                $result['inserted'] = $affected;
+                $result['updated'] = $rowCount - $affected;
+            }
             return $result;
         } else {
             return $affected;
