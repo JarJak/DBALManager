@@ -106,7 +106,6 @@ class DBALManager
      *                                        (i.e. indexes) default: 1 (the ID)
      * @param array|null $excludeEmptyColumns array of columns that can contain zero-equal values,
      *                                        set to null if you want to disable auto-null entirely [default: null]
-     * @param bool       $returnAsArray       instead of returning affected rows, returns ['inserted' => int, 'updated' => int]
      *
      * @return int|array number of affected rows or ['inserted' => int, 'updated' => int] if $returnAsArray = true
      *
@@ -116,8 +115,7 @@ class DBALManager
         string $table,
         array $rows,
         int $updateIgnoreCount = 1,
-        ?array $excludeEmptyColumns = null,
-        bool $returnAsArray = false
+        ?array $excludeEmptyColumns = null
     ) {
         if (empty($rows)) {
             return 0;
@@ -136,14 +134,6 @@ class DBALManager
         [$sql, $params] = array_values(SqlPreparator::prepareMultiInsertOrUpdate($table, $rows, $ignoreForUpdate));
 
         $affected = $this->conn->executeUpdate($sql, $params);
-
-        if ($returnAsArray) {
-            $rowCount = count($rows);
-            return [
-                'inserted' => $affected,
-                'updated' => $rowCount - $affected,
-            ];
-        }
 
         return $affected;
     }
