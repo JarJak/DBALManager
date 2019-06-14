@@ -9,7 +9,7 @@ use JarJak\Exception\DBALManagerException;
 /**
  * Separated class to ease testing and wrapping prepared SQLs into your own DB Abstraction
  *
- * @author  Jarek Jakubowski <egger1991@gmail.com>
+ * @author Jarek Jakubowski <egger1991@gmail.com>
  */
 class SqlPreparator
 {
@@ -56,7 +56,10 @@ class SqlPreparator
             }
         }
         $sql .= implode(', ', $updateArray);
-        $sql .= ', id=LAST_INSERT_ID(id)';
+        
+        if (! in_array('id', $ignoreForUpdate, true)) {
+            $sql .= ', id=LAST_INSERT_ID(id)';
+        }
 
         return [
             'sql' => $sql,
@@ -82,11 +85,7 @@ class SqlPreparator
         $columns = static::escapeSqlWords($columns);
         $ignoreForUpdate = static::escapeSqlWords($ignoreForUpdate);
 
-        /**
-         * since PHP 7.1 this can look like:
-         * ['params' => $params, 'valueParts' => $valueParts] = static::generateMultiParams($rows, $columns)
-         */
-        [$params, $valueParts] = array_values(static::generateMultiParams($rows, $columns));
+        ['params' => $params, 'valueParts' => $valueParts] = static::generateMultiParams($rows, $columns);
 
         $sql = 'INSERT INTO ' . static::escapeSqlWords($table);
         $sql .= ' (' . implode(', ', $columns) . ')';
@@ -127,7 +126,7 @@ class SqlPreparator
         }
         $columns = static::escapeSqlWords($columns);
 
-        [$params, $valueParts] = array_values(static::generateMultiParams($rows, $columns));
+        ['params' => $params, 'valueParts' => $valueParts] = static::generateMultiParams($rows, $columns);
 
         $sql = 'INSERT INTO ' . static::escapeSqlWords($table) . ' (';
         $sql .= implode(', ', $columns);
@@ -193,7 +192,7 @@ class SqlPreparator
         }
         $columns = static::escapeSqlWords($columns);
 
-        [$params, $valueParts] = array_values(static::generateMultiParams($rows, $columns));
+        ['params' => $params, 'valueParts' => $valueParts] = static::generateMultiParams($rows, $columns);
 
         $sql = 'INSERT IGNORE INTO ' . static::escapeSqlWords($table) . ' (';
         $sql .= implode(', ', $columns);
